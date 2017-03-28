@@ -13,7 +13,9 @@ type LRUCache struct {
   timeout   time.Duration
 }
 
-func NewLRUCache(size int, calcFunc func(interface{}) interface{}) *LRUCache {
+type CalcFunc func(interface{}) interface{}
+
+func NewLRUCache(size int, calcFunc CalcFunc) *LRUCache {
   return &LRUCache{
     queue: make(PriorityQueue, 0, size),
     size: size,
@@ -22,7 +24,7 @@ func NewLRUCache(size int, calcFunc func(interface{}) interface{}) *LRUCache {
   }
 }
 
-func NewLRUCacheWithTimeout(size int, timeout time.Duration, calcFunc func(interface{}) interface{}) *LRUCache {
+func NewLRUCacheWithTimeout(size int, timeout time.Duration, calcFunc CalcFunc) *LRUCache {
   return &LRUCache{
     queue: make(PriorityQueue, 0, size),
     size: size,
