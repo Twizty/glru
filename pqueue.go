@@ -41,6 +41,16 @@ func (pq *PriorityQueue) Pop() interface{} {
   return item
 }
 
+func (pq *PriorityQueue) FindByValue(val interface{}) *Item {
+  for _, item := range *pq {
+    if item.Value == val {
+      return item
+    }
+  }
+
+  return nil
+}
+
 func (pq *PriorityQueue) Set(val interface{}, priority time.Time) {
   var item *Item
   for _, e := range (*pq) {

@@ -10,6 +10,7 @@ type LRUCache struct {
   size      int
   hash      map[interface{}]interface{} // yolo
   calculate func(interface{}) interface{}
+  timeout   time.Duration
 }
 
 func NewLRUCache(size int, calcFunc func(interface{}) interface{}) *LRUCache {
@@ -21,6 +22,16 @@ func NewLRUCache(size int, calcFunc func(interface{}) interface{}) *LRUCache {
   }
 }
 
+func NewLRUCacheWithTimeout(size int, timeout time.Duration, calcFunc func(interface{}) interface{}) *LRUCache {
+  return &LRUCache{
+    queue: make(PriorityQueue, 0, size),
+    size: size,
+    hash: make(map[interface{}]interface{}),
+    calculate: calcFunc,
+    timeout: timeout,
+  }
+}
+
 func (self *LRUCache) Count() int {
   return len(self.queue)
 }
@@ -29,7 +40,7 @@ func (self *LRUCache) CalculateWithCache(key interface{}) interface{} {
   val, exists := self.hash[key]
   time := time.Now()
 
-  if exists {
+  if exists && !self.isExpiredBy(time, self.queue.FindByValue(key)) {
     self.queue.Set(key, time)
     return val
   }
@@ -46,6 +57,12 @@ func (self *LRUCache) CalculateWithCache(key interface{}) interface{} {
     Priority: time,
   })
   return result
+}
+
+func (self *LRUCache) isExpiredBy(t time.Time, item *Item) bool {
+  if self.timeout <= 0 { return false }
+
+  return int64(self.timeout) + item.Priority.UnixNano() > t.UnixNano()
 }
 
 func (self *LRUCache) CalculateWithoutCache(key interface{}) interface{} {
