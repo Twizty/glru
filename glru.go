@@ -5,31 +5,30 @@ import (
   "time"
 )
 
-type LRUCache struct {
-  queue     PriorityQueue
-  size      int
-  hash      map[interface{}]interface{} // yolo
-  calculate func(interface{}) interface{}
-  timeout   time.Duration
+type Calculater interface {
+  Calculate() interface{}
 }
 
-type CalcFunc func(interface{}) interface{}
+type LRUCache struct {
+  queue      PriorityQueue
+  size       int
+  hash       map[interface{}]interface{} // yolo
+  timeout    time.Duration
+}
 
-func NewLRUCache(size int, calcFunc CalcFunc) *LRUCache {
+func NewLRUCache(size int) *LRUCache {
   return &LRUCache{
     queue: make(PriorityQueue, 0, size),
     size: size,
     hash: make(map[interface{}]interface{}),
-    calculate: calcFunc,
   }
 }
 
-func NewLRUCacheWithTimeout(size int, timeout time.Duration, calcFunc CalcFunc) *LRUCache {
+func NewLRUCacheWithTimeout(size int, timeout time.Duration) *LRUCache {
   return &LRUCache{
     queue: make(PriorityQueue, 0, size),
     size: size,
     hash: make(map[interface{}]interface{}),
-    calculate: calcFunc,
     timeout: timeout,
   }
 }
@@ -38,7 +37,7 @@ func (self *LRUCache) Count() int {
   return len(self.queue)
 }
 
-func (self *LRUCache) CalculateWithCache(key interface{}) interface{} {
+func (self *LRUCache) CalculateWithCache(key interface{}, calculater Calculater) interface{} {
   val, exists := self.hash[key]
   time := time.Now()
 
@@ -47,7 +46,7 @@ func (self *LRUCache) CalculateWithCache(key interface{}) interface{} {
     return val
   }
 
-  result := self.calculate(key)
+  result := calculater.Calculate()
   if len(self.hash) == self.size {
     item := heap.Pop(&self.queue).(*Item)
     delete(self.hash, item.Value)
@@ -67,9 +66,9 @@ func (self *LRUCache) isExpiredBy(t time.Time, item *Item) bool {
   return int64(self.timeout) + item.Priority.UnixNano() > t.UnixNano()
 }
 
-func (self *LRUCache) CalculateWithoutCache(key interface{}) interface{} {
+func (self *LRUCache) CalculateWithoutCache(key interface{}, calculater Calculater) interface{} {
   _, exists := self.hash[key]
-  result := self.calculate(key)
+  result := calculater.Calculate()
   time := time.Now()
   self.hash[key] = result
 

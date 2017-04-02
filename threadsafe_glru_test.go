@@ -6,13 +6,11 @@ import (
 )
 
 func TestThreadsafeCalculationWithCache(t *testing.T) {
-  c := NewThreadsafeLRUCache(10, 2, func (arg interface{}) interface{} {
-    return arg
-  })
+  c := NewThreadsafeLRUCache(10, 2)
   defer c.Close()
 
-  go c.CalculateWithCache(5)
-  go c.CalculateWithCache(10)
+  go c.CalculateWithCache(5, baseTestCalculater{5})
+  go c.CalculateWithCache(10, baseTestCalculater{10})
 
   time.Sleep(10 * time.Millisecond)
   if c.Count() != 2 {
@@ -21,15 +19,13 @@ func TestThreadsafeCalculationWithCache(t *testing.T) {
 }
 
 func TestThreadsafeCalculationWithCacheOverflow(t *testing.T) {
-  c := NewThreadsafeLRUCache(3, 2, func (arg interface{}) interface{} {
-    return arg
-  })
+  c := NewThreadsafeLRUCache(3, 2)
   defer c.Close()
 
-  go c.CalculateWithCache(5)
-  go c.CalculateWithCache(10)
-  go c.CalculateWithCache(15)
-  go c.CalculateWithCache(20)
+  go c.CalculateWithCache(5, baseTestCalculater{5})
+  go c.CalculateWithCache(10, baseTestCalculater{10})
+  go c.CalculateWithCache(15, baseTestCalculater{15})
+  go c.CalculateWithCache(20, baseTestCalculater{20})
 
   time.Sleep(10 * time.Millisecond)
   if c.Count() != 3 {
