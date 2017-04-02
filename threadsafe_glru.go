@@ -5,8 +5,8 @@ import (
 )
 
 const (
-  CALCULATE_WITH_CATCH_ACTION = 1
-  CALCULATE_WITHOUT_CATCH_ACTION = 2
+  CALCULATE_WITH_CACHE_ACTION = 1
+  CALCULATE_WITHOUT_CACHE_ACTION = 2
   GET_COUNT = 3
   EXIT = 999
 )
@@ -24,9 +24,9 @@ type request struct {
 func handleRequests(cache *LRUCache, c <-chan *request) {
   for request := range c {
     switch request.action {
-      case CALCULATE_WITH_CATCH_ACTION:
+      case CALCULATE_WITH_CACHE_ACTION:
         request.responsePipe <- cache.CalculateWithCache(request.body)
-      case CALCULATE_WITHOUT_CATCH_ACTION:
+      case CALCULATE_WITHOUT_CACHE_ACTION:
         request.responsePipe <- cache.CalculateWithoutCache(request.body)
       case GET_COUNT:
         request.responsePipe <- cache.Count()
@@ -62,13 +62,13 @@ func NewThreadsafeLRUCacheWithTimeout(size int, chanSize int, timeout time.Durat
 
 func (self *ThreadsafeLRUCache) CalculateWithCache(key interface{}) interface{} {
   resultPipe := make(chan interface{})
-  self.c <- &request{CALCULATE_WITH_CATCH_ACTION, resultPipe, key}
+  self.c <- &request{CALCULATE_WITH_CACHE_ACTION, resultPipe, key}
   return <-resultPipe
 }
 
 func (self *ThreadsafeLRUCache) CalculateWithoutCache(key interface{}) interface{} {
   resultPipe := make(chan interface{})
-  self.c <- &request{CALCULATE_WITHOUT_CATCH_ACTION, resultPipe, key}
+  self.c <- &request{CALCULATE_WITHOUT_CACHE_ACTION, resultPipe, key}
   return <-resultPipe
 }
 
@@ -76,4 +76,10 @@ func (self *ThreadsafeLRUCache) Count() int {
   resultPipe := make(chan interface{})
   self.c <- &request{GET_COUNT, resultPipe, nil}
   return (<-resultPipe).(int)
+}
+
+func (self *ThreadsafeLRUCache) Close() error {
+  self.c <- &request{EXIT, nil, nil}
+  close(self.c)
+  return nil
 }

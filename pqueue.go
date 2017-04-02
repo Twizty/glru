@@ -52,12 +52,7 @@ func (pq *PriorityQueue) FindByValue(val interface{}) *Item {
 }
 
 func (pq *PriorityQueue) Set(val interface{}, priority time.Time) {
-  var item *Item
-  for _, e := range (*pq) {
-    if e.Value == val {
-      item = e
-    } 
-  }
+  item := pq.FindByValue(val)
 
   if item == nil {
     heap.Push(pq, &Item{

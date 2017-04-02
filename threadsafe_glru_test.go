@@ -9,6 +9,7 @@ func TestThreadsafeCalculationWithCache(t *testing.T) {
   c := NewThreadsafeLRUCache(10, 2, func (arg interface{}) interface{} {
     return arg
   })
+  defer c.Close()
 
   go c.CalculateWithCache(5)
   go c.CalculateWithCache(10)
@@ -23,6 +24,7 @@ func TestThreadsafeCalculationWithCacheOverflow(t *testing.T) {
   c := NewThreadsafeLRUCache(3, 2, func (arg interface{}) interface{} {
     return arg
   })
+  defer c.Close()
 
   go c.CalculateWithCache(5)
   go c.CalculateWithCache(10)
