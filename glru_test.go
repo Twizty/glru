@@ -41,6 +41,26 @@ func TestCalculationWithCache(t *testing.T) {
   }
 }
 
+func TestGetsValueByExistingKey(t *testing.T) {
+  c := NewLRUCache(10)
+
+  c.CalculateWithCache(5, baseTestCalculater{5})
+
+  res := c.Get(5)
+  if res != 5 {
+    t.Error("Expectd value must be equal 5")
+  }
+}
+
+func TestReturnsNilIfKeyIsEmpty(t *testing.T) {
+  c := NewLRUCache(10)
+
+  res := c.Get(5)
+  if res != nil {
+    t.Error("Expectd value must be nil")
+  }
+}
+
 func TestCalculateWithTimeout(t *testing.T) {
   rand.New(rand.NewSource(time.Now().UnixNano()))
   values := make([]interface{}, 0, 0)

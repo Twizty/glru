@@ -60,6 +60,18 @@ func (self *LRUCache) CalculateWithCache(key interface{}, calculater Calculater)
   return result
 }
 
+func (self *LRUCache) Get(key interface{}) interface{} {
+  val, exists := self.hash[key]
+  time := time.Now()
+
+  if exists && !self.isExpiredBy(time, self.queue.FindByValue(key)) {
+    self.queue.Set(key, time)
+    return val
+  }
+
+  return nil
+}
+
 func (self *LRUCache) isExpiredBy(t time.Time, item *Item) bool {
   if self.timeout <= 0 { return false }
 

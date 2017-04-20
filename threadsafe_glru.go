@@ -8,6 +8,7 @@ const (
   CALCULATE_WITH_CACHE_ACTION = 1
   CALCULATE_WITHOUT_CACHE_ACTION = 2
   GET_COUNT = 3
+  GET = 4
   EXIT = 999
 )
 
@@ -31,6 +32,8 @@ func handleRequests(cache *LRUCache, c <-chan *request) {
         request.responsePipe <- cache.CalculateWithoutCache(request.key, request.calculater)
       case GET_COUNT:
         request.responsePipe <- cache.Count()
+      case GET:
+        request.responsePipe <- cache.Get(request.key)
       case EXIT:
         return
     }
@@ -83,4 +86,10 @@ func (self *ThreadsafeLRUCache) Close() error {
   self.c <- &request{EXIT, nil, nil, nil}
   close(self.c)
   return nil
+}
+
+func (self *ThreadsafeLRUCache) Get(key interface{}) interface{} {
+  resultPipe := make(chan interface{})
+  self.c <- &request{GET, resultPipe, key, nil}
+  return <-resultPipe
 }

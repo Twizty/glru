@@ -18,6 +18,29 @@ func TestThreadsafeCalculationWithCache(t *testing.T) {
   }
 }
 
+func TestThreadsafeGetExistingValue(t *testing.T) {
+  c := NewThreadsafeLRUCache(10, 2)
+  defer c.Close()
+
+  go c.CalculateWithCache(5, baseTestCalculater{5})
+
+  time.Sleep(5 * time.Millisecond)
+  res := c.Get(5)
+  if res != 5 {
+    t.Error("Expected value to be equal 5")
+  }
+}
+
+func TestThreadsafeGetNilIfValueIsMissing(t *testing.T) {
+  c := NewThreadsafeLRUCache(10, 2)
+  defer c.Close()
+
+  res := c.Get(5)
+  if res != nil {
+    t.Error("Expected value to be nil")
+  }
+}
+
 func TestThreadsafeCalculationWithCacheOverflow(t *testing.T) {
   c := NewThreadsafeLRUCache(3, 2)
   defer c.Close()
